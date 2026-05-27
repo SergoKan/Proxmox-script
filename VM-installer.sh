@@ -521,14 +521,19 @@ install_opnsense() {
     exit 1
   fi
 
-  # ── Проверка SHA256 ──────────────────────────────────────────────────────
+# ── Проверка SHA256 ──────────────────────────────────────────────────────
+  # Формат OPNsense (BSD-style): SHA256 (filename) = hash
   msg_info "Загрузка и проверка контрольной суммы SHA256"
-
-  if curl -fsSL "$CHECKSUM_FILE" "$BASE_URL/$CHECKSUM_FILE" 2>/dev/null; then
-    ACTUAL_HASH=$(grep "$IMG_ARCHIVE" "$CHECKSUM_FILE" | awk '{print $1}')
+ 
+  if curl -fsSL -o "$CHECKSUM_FILE" "$BASE_URL/$CHECKSUM_FILE" 2>/dev/null; then
+    # Извлекаем хэш из BSD-формата: SHA256 (OPNsense-...) = <hash>
+    ACTUAL_HASH=$(grep "($IMG_ARCHIVE)" "$CHECKSUM_FILE" | sed 's/.*= //')
     if [[ -n "$ACTUAL_HASH" ]]; then
-      if ! echo "$ACTUAL_HASH  $IMG_ARCHIVE" | sha256sum -c - >/dev/null 2>&1; then
+      LOCAL_HASH=$(sha256sum "$IMG_ARCHIVE" | awk '{print $1}')
+      if [[ "$LOCAL_HASH" != "$ACTUAL_HASH" ]]; then
         msg_error "Ошибка проверки контрольной суммы (SHA256 mismatch)!"
+        msg_error "  Ожидался: $ACTUAL_HASH"
+        msg_error "  Получен:  $LOCAL_HASH"
         exit 1
       fi
       msg_ok "SHA256 проверен успешно"
