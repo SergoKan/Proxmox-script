@@ -524,7 +524,7 @@ install_opnsense() {
   # ── Проверка SHA256 ──────────────────────────────────────────────────────
   msg_info "Загрузка и проверка контрольной суммы SHA256"
 
-  if curl -fsSL -o "$CHECKSUM_FILE" "$BASE_URL/$CHECKSUM_FILE" 2>/dev/null; then
+  if curl -fsSL "$CHECKSUM_FILE" "$BASE_URL/$CHECKSUM_FILE" 2>/dev/null; then
     ACTUAL_HASH=$(grep "$IMG_ARCHIVE" "$CHECKSUM_FILE" | awk '{print $1}')
     if [[ -n "$ACTUAL_HASH" ]]; then
       if ! echo "$ACTUAL_HASH  $IMG_ARCHIVE" | sha256sum -c - >/dev/null 2>&1; then
